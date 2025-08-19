@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universidades del Perú</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+            overflow: hidden; /* Evitar scroll en el body si las pantallas se superponen */
+        }
+        .app-container {
+            width: 100%;
+            max-width: 360px; /* Ancho típico de un celular */
+            height: 100vh;
+            max-height: 720px; /* Alto típico de un celular */
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cabecera de la aplicación */
+        .header {
+            background-color: #4CAF50; /* Verde vibrante */
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos de las pantallas (Home, List, Details) */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #fff;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%); /* Ocultar a la derecha por defecto */
+        }
+        .screen.active {
+            transform: translateX(0); /* Mostrar */
+        }
+        .screen.home {
+            transform: translateX(0); /* La pantalla de inicio siempre visible al principio */
+        }
+
+        /* Contenido de las pantallas */
+        .screen-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Permitir scroll si el contenido es largo */
+            padding-top: 60px; /* Espacio para el header */
+        }
+
+        /* Home Screen */
+        .home-screen h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+        .city-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #2196F3; /* Azul para botones */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .city-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+        }
+        .city-button:active {
+            transform: translateY(0);
+        }
+
+        /* List Screen */
+        .university-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #e3f2fd; /* Azul claro */
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .university-item:hover {
+            background-color: #bbdefb;
+            transform: translateX(5px);
+        }
+        .university-item input[type="checkbox"] {
+            margin-right: 15px;
+            transform: scale(1.5); /* Checkbox más grande */
+            accent-color: #4CAF50; /* Color del checkbox */
+        }
+        .university-item span {
+            font-weight: 500;
+            color: #3f51b5; /* Azul más oscuro */
+        }
+
+        /* Details Screen */
+        .details-screen img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .details-screen h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .details-screen p {
+            font-size: 1em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .details-screen strong {
+            color: #000;
+        }
+        .details-screen .back-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #f44336; /* Rojo para volver */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .details-screen .back-button:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+        }
+        .details-screen .back-button:active {
+            transform: translateY(0);
+        }
+
+        /* Contenedor de contenido para padding */
+        .content-wrapper {
+            padding: 20px;
+            padding-top: 80px; /* Ajuste para el header fijo */
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        /* Títulos de pantalla flotantes */
+        .screen-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            background-color: #4CAF50; /* Mismo color que el header general */
+            color: white;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 10; /* Asegurar que esté sobre el contenido */
+        }
+        /* Ajuste para que el contenido no se oculte detrás del título */
+        #list-screen .screen-content,
+        #details-screen .screen-content {
+            padding-top: 80px; /* Espacio para el título de la pantalla */
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Pantalla de Inicio -->
+        <div id="home-screen" class="screen home">
+            <div class="screen-title">Pantalla de Inicio</div>
+            <div class="content-wrapper home-screen">
+                <h1>Seleccionar Ciudad</h1>
+                <button class="city-button" data-city="Lima">Lima</button>
+                <button class="city-button" data-city="Huancayo">Huancayo</button>
+                <button class="city-button" data-city="La Merced">La Merced (Chanchamayo)</button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Lista de Universidades -->
+        <div id="list-screen" class="screen">
+            <div class="screen-title">Lista de Universidades</div>
+            <div class="content-wrapper">
+                <div id="university-list-container">
+                    <!-- Las universidades se cargarán aquí -->
+                </div>
+                <button class="back-button" onclick="showScreen('home-screen')">Volver</button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Detalles de Universidad -->
+        <div id="details-screen" class="screen">
+            <div class="screen-title">Detalles de Universidad</div>
+            <div class="content-wrapper">
+                <img id="uni-image" src="" alt="Imagen de la Universidad">
+                <h2 id="uni-name"></h2>
+                <p><strong>Descripción:</strong> <span id="uni-description"></span></p>
+                <p><strong>Pensión aprox.:</strong> <span id="uni-price"></span></p>
+                <p><strong>Fechas de Exámenes de Admisión:</strong> <span id="uni-admission"></span></p>
+                <button class="back-button" onclick="showScreen('list-screen')">Volver</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de las universidades
+        // He incluido las más representativas y creado datos ficticios para el precio ponderado
+        // y las fechas de admisión, ya que estos varían y son difíciles de obtener con exactitud
+        // sin una base de datos en tiempo real.
+        const universities = [
+            // Lima (Top 5 representativas para el ejemplo)
+            {
+                id: 'pucp',
+                name: 'Pontificia Universidad Católica del Perú (PUCP)',
+                city: 'Lima',
+                description: 'Una de las universidades privadas más prestigiosas de Perú, reconocida por su excelencia académica en diversas áreas como ingeniería, humanidades y ciencias sociales.',
+                priceRange: 'S/. 1,500 - S/. 4,500 mensuales (según escala socioeconómica)',
+                admissionDates: 'Marzo, Agosto (Examen de Admisión General)',
+                imageUrl: 'https://placehold.co/400x200/007bff/ffffff?text=PUCP'
+            },
+            {
+                id: 'unmsm',
+                name: 'Universidad Nacional Mayor de San Marcos (UNMSM)',
+                city: 'Lima',
+                description: 'La universidad pública más antigua de América, con una vasta tradición y ofreciendo una amplia gama de carreras profesionales y de investigación.',
+                priceRange: 'Pública (tasas administrativas mínimas)',
+                admissionDates: 'Febrero, Septiembre (Examen de Admisión General)',
+                imageUrl: 'https://placehold.co/400x200/28a745/ffffff?text=UNMSM'
+            },
+            {
+                id: 'up',
+                name: 'Universidad del Pacífico (UP)',
+                city: 'Lima',
+                description: 'Especializada en economía, finanzas y negocios, reconocida por su rigurosa formación y su enfoque en el desarrollo de líderes empresariales.',
+                priceRange: 'S/. 2,500 - S/. 5,000 mensuales',
+                admissionDates: 'Marzo, Agosto (Evaluación de Talentos, Examen de Admisión)',
+                imageUrl: 'https://placehold.co/400x200/dc3545/ffffff?text=UPacifico'
+            },
+            {
+                id: 'upc',
+                name: 'Universidad Peruana de Ciencias Aplicadas (UPC)',
+                city: 'Lima',
+                description: 'Innovadora universidad privada con un fuerte enfoque en la aplicación práctica del conocimiento y la empleabilidad, con programas variados y modernos.',
+                priceRange: 'S/. 1,200 - S/. 3,500 mensuales',
+                admissionDates: 'Enero, Abril, Agosto (Diversas modalidades)',
+                imageUrl: 'https://placehold.co/400x200/ffc107/000000?text=UPC'
+            },
+            {
+                id: 'ulima',
+                name: 'Universidad de Lima',
+                city: 'Lima',
+                description: 'Reconocida por sus programas en comunicaciones, derecho y negocios, ofrece una educación integral con énfasis en la creatividad y la ética.',
+                priceRange: 'S/. 1,300 - S/. 3,800 mensuales',
+                admissionDates: 'Marzo, Julio (Examen de Admisión)',
+                imageUrl: 'https://placehold.co/400x200/6f42c1/ffffff?text=ULima'
+            },
+
+            // Huancayo (Top 3 representativas para el ejemplo)
+            {
+                id: 'uncp',
+                name: 'Universidad Nacional del Centro del Perú (UNCP)',
+                city: 'Huancayo',
+                description: 'La principal universidad pública de la sierra central, con una amplia oferta académica en ciencias, ingeniería y humanidades, y un gran impacto regional.',
+                priceRange: 'Pública (tasas administrativas mínimas)',
+                admissionDates: 'Marzo, Agosto (Examen de Admisión Ordinario)',
+                imageUrl: 'https://placehold.co/400x200/17a2b8/ffffff?text=UNCP'
+            },
+            {
+                id: 'upla',
+                name: 'Universidad Peruana Los Andes (UPLA)',
+                city: 'Huancayo',
+                description: 'Una universidad privada con múltiples sedes y programas, destacada por sus facultades de ciencias de la salud y educación en la región central.',
+                priceRange: 'S/. 800 - S/. 1,500 mensuales',
+                admissionDates: 'Abril, Septiembre (Examen de Admisión)',
+                imageUrl: 'https://placehold.co/400x200/fd7e14/ffffff?text=UPLA'
+            },
+            {
+                id: 'ucontinental',
+                name: 'Universidad Continental (UC)',
+                city: 'Huancayo',
+                description: 'Universidad privada con un enfoque en la innovación y el emprendimiento, utilizando metodologías de enseñanza modernas y una sólida infraestructura.',
+                priceRange: 'S/. 900 - S/. 1,800 mensuales',
+                admissionDates: 'Enero, Mayo, Septiembre (Admisión Regular)',
+                imageUrl: 'https://placehold.co/400x200/e83e8c/ffffff?text=UContinental'
+            },
+
+            // La Merced (Chanchamayo)
+            {
+                id: 'unicjsa',
+                name: 'Universidad Nacional Intercultural de la Selva Central Juan Santos Atahualpa (UNICJSA)',
+                city: 'La Merced',
+                description: 'Universidad pública con enfoque en la interculturalidad y las necesidades de la selva central, ofreciendo carreras alineadas con el desarrollo regional.',
+                priceRange: 'Pública (tasas administrativas mínimas)',
+                admissionDates: 'Junio, Noviembre (Examen de Admisión)',
+                imageUrl: 'https://placehold.co/400x200/800080/ffffff?text=UNICJSA'
+            },
+            {
+                id: 'upla_chanchamayo',
+                name: 'Universidad Peruana Los Andes (Sede Chanchamayo)',
+                city: 'La Merced',
+                description: 'Filial de UPLA en Chanchamayo, brindando educación superior con programas que responden a la vocación productiva y ambiental de la selva central.',
+                priceRange: 'S/. 700 - S/. 1,200 mensuales',
+                admissionDates: 'Abril, Septiembre (Coordinar con sede principal de UPLA)',
+                imageUrl: 'https://placehold.co/400x200/20c997/ffffff?text=UPLA+Chanchamayo'
+            }
+        ];
+
+        // Función para mostrar una pantalla específica
+        function showScreen(screenId) {
+            // Oculta todas las pantallas
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            // Muestra la pantalla deseada
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Función para cargar la lista de universidades por ciudad
+        function loadUniversityList(city) {
+            const listContainer = document.getElementById('university-list-container');
+            listContainer.innerHTML = ''; // Limpiar lista anterior
+
+            // Filtrar universidades por la ciudad seleccionada
+            const filteredUniversities = universities.filter(uni => uni.city === city);
+
+            if (filteredUniversities.length === 0) {
+                listContainer.innerHTML = `<p>No hay universidades disponibles para ${city} en esta beta.</p>`;
+            } else {
+                // Crear y añadir elementos para cada universidad
+                filteredUniversities.forEach(uni => {
+                    const uniItem = document.createElement('div');
+                    uniItem.classList.add('university-item');
+                    uniItem.innerHTML = `
+                        <input type="checkbox" disabled> <!-- Checkbox disabled como en la imagen -->
+                        <span>${uni.name}</span>
+                    `;
+                    // Añadir evento click para ver los detalles de la universidad
+                    uniItem.addEventListener('click', () => {
+                        showUniversityDetails(uni.id);
+                    });
+                    listContainer.appendChild(uniItem);
+                });
+            }
+            showScreen('list-screen'); // Mostrar la pantalla de lista
+        }
+
+        // Función para mostrar los detalles de una universidad
+        function showUniversityDetails(uniId) {
+            const uni = universities.find(u => u.id === uniId);
+            if (uni) {
+                document.getElementById('uni-image').src = uni.imageUrl;
+                document.getElementById('uni-image').alt = `Imagen de ${uni.name}`;
+                document.getElementById('uni-name').textContent = uni.name;
+                document.getElementById('uni-description').textContent = uni.description;
+                document.getElementById('uni-price').textContent = uni.priceRange;
+                document.getElementById('uni-admission').textContent = uni.admissionDates;
+                showScreen('details-screen'); // Mostrar la pantalla de detalles
+            } else {
+                alert('Universidad no encontrada.'); // Usar alert solo para errores en esta beta
+            }
+        }
+
+        // Event Listeners para los botones de ciudad en la pantalla de inicio
+        document.querySelectorAll('.city-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const city = event.target.dataset.city;
+                loadUniversityList(city);
+            });
+        });
+
+        // Inicializar la app mostrando la pantalla de inicio al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            showScreen('home-screen');
+        });
+    </script>
+</body>
+</html>
